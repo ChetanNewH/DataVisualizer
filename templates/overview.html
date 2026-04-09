@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DATAMUSE — Project Overview</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+body { font-family: 'Funnel Display', sans-serif; background: linear-gradient(135deg,#1a0d2e,#2d1b47,#5b2c6f,#8b3a62,#b83d50); color:#fff; }
+.content { max-width: 1200px; margin: 0 auto; padding: 6rem 1rem 2rem; }
+.card { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border-radius: 1.5rem; border:1px solid rgba(255,255,255,0.2); padding:2rem; margin-bottom:2rem; transition: all 0.3s ease; }
+.card:hover { transform: translateY(-5px); box-shadow: 0 25px 40px rgba(0,0,0,0.3); }
+h1,h2 { color:#cb00ff; }
+ul { list-style-type: disc; padding-left: 1.5rem; }
+.tech-chip { display:inline-block; background: linear-gradient(135deg,#cb00ff,#b83d50); color:#fff; padding:5px 12px; border-radius:15px; margin:3px; font-size:0.85rem; }
+.step { margin-bottom:1rem; }
+.step-number { display:inline-block; background:#fff; color:#8b3a62; font-weight:bold; border-radius:50%; width:2rem; height:2rem; text-align:center; line-height:2rem; margin-right:0.75rem; }
+</style>
+</head>
+<body>
+<div class="content">
+
+<h1 class="text-4xl font-bold mb-6 text-center">DATAMUSE — Project Overview</h1>
+
+<div class="card">
+<h2 class="text-2xl font-semibold mb-3">Project Objective</h2>
+<p>DATAMUSE is designed to simplify the process of <strong>data cleaning, exploration, and visualization</strong> for users.
+It automates data preprocessing and provides smart chart suggestions to accelerate data analysis workflows.</p>
+</div>
+
+<div class="card">
+<h2 class="text-2xl font-semibold mb-3">User Benefits</h2>
+<ul>
+<li>Quickly clean raw datasets without coding</li>
+<li>Understand data distribution and patterns visually</li>
+<li>Generate multiple chart suggestions with reasoning</li>
+<li>Interactive plotting and download of cleaned data</li>
+<li>Responsive, modern dashboard UI for smooth experience</li>
+</ul>
+</div>
+
+<div class="card">
+<h2 class="text-2xl font-semibold mb-3">Supported Data Types</h2>
+<ul>
+<li><strong>Numeric:</strong> Integer and Float columns for histograms, scatter plots, box plots, etc.</li>
+<li><strong>Categorical:</strong> Text columns for bar plots, count plots, pie charts, etc.</li>
+<li><strong>Datetime:</strong> Date/Time columns for line plots and trends</li>
+</ul>
+</div>
+
+<div class="card">
+<h2 class="text-2xl font-semibold mb-3">Workflow / Pipeline</h2>
+<div class="step"><span class="step-number">1</span> Upload dataset (CSV or Excel)</div>
+<div class="step"><span class="step-number">2</span> Automatic data cleaning & preprocessing</div>
+<div class="step"><span class="step-number">3</span> Column type detection (Numeric, Categorical, Datetime)</div>
+<div class="step"><span class="step-number">4</span> Generate chart suggestions with reason</div>
+<div class="step"><span class="step-number">5</span> Plot charts interactively</div>
+<div class="step"><span class="step-number">6</span> Download cleaned dataset</div>
+</div>
+
+<div class="card">
+<h2 class="text-2xl font-semibold mb-3">Key Features</h2>
+<ul>
+<li>Upload & preview datasets</li>
+<li>Automatic cleaning (missing values, duplicates, formatting)</li>
+<li>Column type detection & intelligent chart suggestions</li>
+<li>Plot various charts: Histogram, Box, Scatter, Line, Bar, Heatmap</li>
+<li>Interactive charts embedded in web page</li>
+<li>Download cleaned dataset</li>
+<li>Responsive UI with glassmorphism & gradient buttons</li>
+</ul>
+</div>
+
+<!-- NEW USE CASES SECTION -->
+<div class="card">
+<h2 class="text-2xl font-semibold mb-3">Use Cases</h2>
+<ul>
+<li>Data Analysts: Quickly clean and explore client datasets.</li>
+<li>Data Scientists: Generate insights without repetitive preprocessing.</li>
+<li>Business Intelligence: Visualize KPIs and trends effortlessly.</li>
+<li>Students & Learners: Understand data patterns and relationships.</li>
+<li>Project Demos: Showcase charts and insights interactively.</li>
+</ul>
+</div>
+
+<div class="card">
+<h2 class="text-2xl font-semibold mb-3">Technologies Used</h2>
+<div class="flex flex-wrap">
+<span class="tech-chip">Python</span>
+<span class="tech-chip">Flask</span>
+<span class="tech-chip">Pandas</span>
+<span class="tech-chip">NumPy</span>
+<span class="tech-chip">Matplotlib</span>
+<span class="tech-chip">Seaborn</span>
+<span class="tech-chip">TailwindCSS</span>
+<span class="tech-chip">Anime.js</span>
+<span class="tech-chip">HTML5</span>
+<span class="tech-chip">CSS3</span>
+<span class="tech-chip">JS</span>
+</div>
+</div>
+
+<div class="card">
+<h2 class="text-2xl font-semibold mb-3">Project File Structure</h2>
+<ul>
+<li><strong>app.py</strong> — main Flask application</li>
+<li><strong>templates/</strong> — HTML templates (upload, dataclean, chart_suggestions, generate_chart, overview)</li>
+<li><strong>static/</strong> — CSS, JS, charts</li>
+<li><strong>uploads/</strong> — uploaded datasets & cleaned files</li>
+<li><strong>functions/</strong> — reusable functions (data cleaning, chart suggestions, plotting)</li>
+</ul>
+</div>
+
+<div class="card">
+<h2 class="text-2xl font-semibold mb-3">Animations & UI Effects</h2>
+<ul>
+<li>Glassmorphism cards with hover elevation</li>
+<li>Gradient buttons & interactive plot buttons</li>
+<li>Entry animations with Anime.js (fade-in, slide, staggered cards)</li>
+<li>Scrollable dataset previews with smooth scrollbar</li>
+</ul>
+</div>
+
+</div>
+
+<script>
+anime.timeline({loop:false})
+.add({targets:'h1',translateY:[-30,0],opacity:[0,1],duration:800,easing:'easeOutExpo'})
+.add({targets:'.card',translateY:[50,0],opacity:[0,1],duration:1000,delay:anime.stagger(200),easing:'easeOutExpo'});
+</script>
+</body>
+</html>

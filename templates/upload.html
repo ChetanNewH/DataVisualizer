@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataMuse - Upload Data File</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Funnel Display', sans-serif; 
+        }
+        .dark-gradient {
+            min-height: 100vh;
+            position: relative;
+            background: linear-gradient(135deg, #1a0d2e 0%, #2d1b47 25%, #5b2c6f 50%, #8b3a62 75%, #b83d50 100%);
+        }
+        .dark-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('{{ url_for("static", filename="images/DATAMUSE.png") }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.8;
+            z-index: 0;
+        }
+        .content-overlay {
+            position: relative;
+            z-index: 1;
+        }
+        /* Loading Screen Styles */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+            overflow: hidden;
+        }
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loading-logo {
+            font-size: 4rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 1rem;
+            font-family: 'Funnel Display', sans-serif;
+            letter-spacing: 0.2em;
+        }
+        .loading-tagline {
+            font-size: 1rem;
+            color: #888888;
+            margin-bottom: 3rem;
+            font-family: 'Funnel Display', sans-serif;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+        /* Loading Bar Styles */
+        .loading-bar-container {
+            width: 400px;
+            height: 3px;
+            background-color: #333333;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .loading-bar {
+            height: 100%;
+            background-color: #ffffff;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+        }
+        .upload-area {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(203, 0, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: rgba(203, 0, 255, 0.6);
+            background: rgba(203, 0, 255, 0.1);
+        }
+        .gradient-button {
+            background: linear-gradient(135deg, #cb00ff 0%, #8b3a62 50%, #b83d50 100%);
+            transition: all 0.3s ease;
+        }
+        .gradient-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(203, 0, 255, 0.4);
+        }
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="dark-gradient text-white min-h-screen">
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">DATAMUSE</div>
+        <div class="loading-tagline">TRANSFORMING NUMBERS INTO CLARITY</div>
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loadingBar"></div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="content-overlay fixed top-0 left-0 right-0 z-10 p-6">
+        <div class="flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-white tracking-tight" style="font-family: 'Funnel Display', sans-serif;">DATAMUSE</h1>
+        </div>
+    </nav>
+
+
+
+
+    <!-- Main Content -->
+    <div class="w-full content-overlay flex items-center justify-center min-h-screen px-4" id="mainContent" style="opacity: 0;">
+        <div class="w-full max-w-lg">
+            <!-- Website Description -->
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-white mb-4">Transform Your Data Into Insights</h2>
+                <p class="text-lg text-gray-300 opacity-90 leading-relaxed">
+                    Upload your CSV or Excel files and instantly generate beautiful, intelligent visualizations. 
+                    DataMuse automatically recommends the best chart types based on your data and lets you customize every detail.
+                </p>
+                <div class="flex justify-center items-center mt-6 space-x-8 text-sm text-purple-200">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Smart Charts
+                    </div>
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        </svg>
+                        Easy to Use
+                    </div>
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Download Ready
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-card rounded-3xl p-8 floating">
+                <div class="text-center mb-6">
+                    <p class="text-gray-300 opacity-80">Upload a CSV or Excel file to get started</p>
+                </div>
+
+                        <!-- Error Message Display -->
+                        {% if error %}
+                        <div class="bg-red-500 bg-opacity-20 border border-red-400 text-red-200 px-4 py-3 rounded-xl relative mb-6 backdrop-blur-sm" role="alert">
+                            <strong class="font-bold">Oops!</strong>
+                            <span class="block sm:inline">{{ error }}</span>
+                        </div>
+                        {% endif %}
+
+                        <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data">
+                            <div class="flex items-center justify-center w-full">
+                                <label for="dropzone-file" class="upload-area flex flex-col items-center justify-center w-full h-64 rounded-2xl cursor-pointer">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6" id="upload-content">
+                                        <div class="pulse-glow rounded-full p-4 mb-4">
+                                            <svg class="w-10 h-10 text-purple-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                            </svg>
+                                        </div>
+                                        <p class="mb-2 text-sm text-purple-200"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                                        <p class="text-xs text-gray-300 opacity-80">CSV, XLS, or XLSX files supported</p>
+                                    </div>
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6 hidden" id="file-selected">
+                                        <div class="rounded-full p-4 mb-4">
+                                            <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <p class="mb-2 text-sm text-green-300 font-semibold" id="filename-display">File selected</p>
+                                        <p class="text-xs text-gray-300 opacity-80">Click to change file</p>
+                                    </div>
+                                    <input id="dropzone-file" name="file" type="file" class="hidden" />
+                                </label>
+                            </div> 
+                            <div class="mt-6">
+                                <button type="submit" class="w-full gradient-button py-3 px-4 rounded-xl text-base font-semibold text-white shadow-lg">
+                                    Upload and Preview The Data
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+      <section class="pt-24 pb-12 bg-gray-900 text-white">
+    <div class="max-w-6xl mx-auto px-6">
+        <h2 class="text-4xl font-bold mb-8 text-center">Our Team Members</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 justify-items-center">
+            <!-- Member 1 -->
+            <div class="flex flex-col items-center bg-gray-800 p-6 rounded-xl shadow-lg">
+                <div class="w-32 h-32 bg-gray-700 rounded-full flex items-center justify-center text-2xl font-bold mb-4">
+                    S
+                </div>
+                <h3 class="text-xl font-semibold">Simran</h3>
+            </div>
+
+            <!-- Member 2 -->
+            <div class="flex flex-col items-center bg-gray-800 p-6 rounded-xl shadow-lg">
+                <div class="w-32 h-32 bg-gray-700 rounded-full flex items-center justify-center text-2xl font-bold mb-4">
+                    C
+                </div>
+                <h3 class="text-xl font-semibold">Chetan</h3>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <script>
+        // Loading Screen Animation
+        function startLoadingAnimation() {
+            // Animate the loading bar
+            anime({
+                targets: '#loadingBar',
+                width: '100%',
+                duration: 2500,
+                easing: 'easeInOutQuad'
+            });
+
+            // Animate the DataMuse text
+            anime({
+                targets: '.loading-logo',
+                scale: [0.8, 1],
+                opacity: [0, 1],
+                duration: 1000,
+                easing: 'easeOutBack'
+            });
+
+            // Animate the tagline
+            anime({
+                targets: '.loading-tagline',
+                translateY: [20, 0],
+                opacity: [0, 1],
+                duration: 800,
+                delay: 300,
+                easing: 'easeOutQuad'
+            });
+
+            // Animate the loading bar container
+            anime({
+                targets: '.loading-bar-container',
+                scaleX: [0, 1],
+                opacity: [0, 1],
+                duration: 600,
+                delay: 600,
+                easing: 'easeOutQuad'
+            });
+        }
+
+        // Function to hide loading screen and show main content
+        function hideLoadingScreen() {
+            // Fade out loading screen
+            anime({
+                targets: '#loadingScreen',
+                opacity: 0,
+                duration: 500,
+                easing: 'easeOutQuad',
+                complete: function() {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                }
+            });
+
+            // Fade in main content
+            anime({
+                targets: '#mainContent',
+                opacity: 1,
+                duration: 800,
+                delay: 200,
+                easing: 'easeOutQuad'
+            });
+
+            // Animate main content elements
+            anime.timeline({loop: false})
+                .add({
+                    targets: 'nav h1',
+                    translateY: [-30, 0],
+                    opacity: [0, 1],
+                    duration: 800,
+                    delay: 400,
+                    easing: 'easeOutExpo'
+                })
+                .add({
+                    targets: 'h2',
+                    translateY: [30, 0],
+                    opacity: [0, 1],
+                    duration: 800,
+                    easing: 'easeOutQuad'
+                }, '-=300')
+                .add({
+                    targets: '.text-lg',
+                    translateY: [20, 0],
+                    opacity: [0, 1],
+                    duration: 600,
+                    easing: 'easeOutQuad'
+                }, '-=400')
+                .add({
+                    targets: '.flex.justify-center.items-center',
+                    scale: [0.8, 1],
+                    opacity: [0, 1],
+                    duration: 500,
+                    easing: 'easeOutBack'
+                }, '-=300')
+                .add({
+                    targets: '.glass-card',
+                    scale: [0.9, 1],
+                    opacity: [0, 1],
+                    duration: 1000,
+                    easing: 'easeOutExpo'
+                }, '-=400')
+                .add({
+                    targets: '.upload-area',
+                    scale: [0.9, 1],
+                    opacity: [0, 1],
+                    duration: 600,
+                    easing: 'easeOutQuad'
+                }, '-=400');
+        }
+
+        // Start loading animation when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            startLoadingAnimation();
+            
+            // Hide loading screen after 3 seconds
+            setTimeout(hideLoadingScreen, 3000);
+        });
+
+        // Add hover animations for upload area
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const uploadArea = document.querySelector('.upload-area');
+                const fileInput = document.getElementById('dropzone-file');
+                const uploadContent = document.getElementById('upload-content');
+                const fileSelected = document.getElementById('file-selected');
+                const filenameDisplay = document.getElementById('filename-display');
+
+                // Handle file selection
+                if (fileInput) {
+                    fileInput.addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            // Show selected file state
+                            uploadContent.classList.add('hidden');
+                            fileSelected.classList.remove('hidden');
+                            filenameDisplay.textContent = file.name;
+                            
+                            // Update upload area styling
+                            uploadArea.classList.add('border-green-400');
+                            uploadArea.classList.remove('border-purple-300');
+                        } else {
+                            // Show default state
+                            uploadContent.classList.remove('hidden');
+                            fileSelected.classList.add('hidden');
+                            uploadArea.classList.remove('border-green-400');
+                            uploadArea.classList.add('border-purple-300');
+                        }
+                    });
+                }
+
+                // Hover animations
+                if (uploadArea) {
+                    uploadArea.addEventListener('mouseenter', function() {
+                        anime({
+                            targets: this,
+                            scale: 1.02,
+                            duration: 300,
+                            easing: 'easeOutQuad'
+                        });
+                    });
+
+                    uploadArea.addEventListener('mouseleave', function() {
+                        anime({
+                            targets: this,
+                            scale: 1,
+                            duration: 300,
+                            easing: 'easeOutQuad'
+                        });
+                    });
+                }
+            }, 3500);
+        });
+    </script>
+</body>
+</html>
+

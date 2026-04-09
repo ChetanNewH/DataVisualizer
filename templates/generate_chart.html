@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataMuse - Create a Visualization</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Funnel Display', sans-serif; }
+
+        .dark-gradient {
+            min-height: 100vh;
+            background: linear-gradient(
+                135deg,
+                #1a0d2e 0%,
+                #2d1b47 25%,
+                #5b2c6f 50%,
+                #8b3a62 75%,
+                #b83d50 100%
+            );
+            position: relative;
+        }
+
+        .dark-gradient::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url('{{ url_for("static", filename="images/DATAMUSE.png") }}');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.8;
+            z-index: 0;
+        }
+
+        .content-overlay { position: relative; z-index: 1; }
+
+        .glass-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.2);
+        }
+
+        .form-select {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            appearance: none;
+        }
+
+        .form-select option {
+            background: #1a0d2e;
+            color: white;
+        }
+
+        .gradient-button {
+            background: linear-gradient(135deg, #cb00ff, #8b3a62, #b83d50);
+        }
+
+        .chart-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 15px;
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .placeholder-text {
+            color: #8b3a62;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body class="dark-gradient text-white">
+
+<nav class="content-overlay fixed top-0 left-0 right-0 z-10 p-6">
+    <h1 class="text-3xl font-bold">DATAMUSE</h1>
+</nav>
+
+<div class="content-overlay pt-24 px-6 pb-8 max-w-full mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+        <!-- LEFT: CHART + INSIGHTS -->
+        <div class="lg:col-span-3">
+            <div class="glass-card rounded-3xl p-6">
+
+                <h2 class="text-2xl font-semibold text-center mb-6">
+                    Your Visualization
+                </h2>
+
+                <!-- Chart -->
+                <div class="chart-container">
+                    <div class="placeholder-text text-center">
+                        Select columns and chart type to generate visualization
+                    </div>
+                </div>
+
+                <!-- INSIGHTS -->
+                <div id="insights-section" class="mt-6 hidden">
+                    <div class="glass-card rounded-2xl p-5">
+                        <h3 class="text-lg font-semibold mb-3">
+                            📊 Data Insights
+                        </h3>
+                        <ul id="insights-list" class="list-disc list-inside space-y-2 text-purple-100 text-sm"></ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT: CONTROLS -->
+        <div class="lg:col-span-1">
+            <div class="glass-card rounded-3xl p-6">
+
+                <h2 class="text-xl font-semibold text-center mb-6">
+                    Chart Settings
+                </h2>
+
+                <form class="space-y-4">
+
+                    <select id="col1" class="form-select w-full p-2 rounded-xl">
+                        <option value="">Select Column 1</option>
+                        {% for col in all_cols %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <select id="col2" class="form-select w-full p-2 rounded-xl">
+                        <option value="">Select Column 2 (Optional)</option>
+                        {% for col in all_cols %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <select id="chart_type" class="form-select w-full p-2 rounded-xl"></select>
+
+                    <button id="submit-btn" type="button"
+                        class="gradient-button w-full py-3 rounded-xl font-semibold"
+                        disabled>
+                        Generate Chart
+                    </button>
+
+                    <button id="download-btn" type="button"
+                        class="bg-gray-600 w-full py-3 rounded-xl font-semibold"
+                        disabled>
+                        Download Chart
+                    </button>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- COLUMN DATA -->
+<div id="column-data"
+     data-numeric='{{ numeric_cols|tojson|safe }}'
+     data-categorical='{{ categorical_cols|tojson|safe }}'
+     data-datetime='{{ datetime_cols|tojson|safe }}'
+     hidden>
+</div>
+
+<script>
+const numericCols = JSON.parse(document.getElementById('column-data').dataset.numeric);
+const categoricalCols = JSON.parse(document.getElementById('column-data').dataset.categorical);
+const datetimeCols = JSON.parse(document.getElementById('column-data').dataset.datetime);
+
+const col1 = document.getElementById('col1');
+const col2 = document.getElementById('col2');
+const chartType = document.getElementById('chart_type');
+const submitBtn = document.getElementById('submit-btn');
+const downloadBtn = document.getElementById('download-btn');
+
+let currentChartUrl = null;
+
+function updateChartTypes() {
+    chartType.innerHTML = '';
+    if (col1.value) {
+        submitBtn.disabled = false;
+        ["Histogram","Bar Plot","Scatter Plot","Line Plot"].forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            chartType.appendChild(opt);
+        });
+    } else {
+        submitBtn.disabled = true;
+    }
+}
+
+async function generateChart() {
+    submitBtn.textContent = 'Generating...';
+    submitBtn.disabled = true;
+
+    const res = await fetch('/generate_chart_ajax', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+            chart_type: chartType.value,
+            col1: col1.value,
+            col2: col2.value
+        })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+        document.querySelector('.chart-container').innerHTML =
+            `<img src="${data.chart_url}?v=${Date.now()}" class="rounded-lg w-full">`;
+
+        currentChartUrl = data.chart_url;
+        downloadBtn.disabled = false;
+
+        const insightsSection = document.getElementById('insights-section');
+        const insightsList = document.getElementById('insights-list');
+        insightsList.innerHTML = '';
+
+        if (data.insights && data.insights.length) {
+            data.insights.forEach(i => {
+                const li = document.createElement('li');
+                li.textContent = i;
+                insightsList.appendChild(li);
+            });
+            insightsSection.classList.remove('hidden');
+        }
+    }
+
+    submitBtn.textContent = 'Generate Chart';
+    submitBtn.disabled = false;
+}
+
+function downloadChart() {
+    if (!currentChartUrl) return;
+    const a = document.createElement('a');
+    a.href = currentChartUrl;
+    a.download = 'datamuse_chart.png';
+    a.click();
+}
+
+col1.addEventListener('change', updateChartTypes);
+col2.addEventListener('change', updateChartTypes);
+submitBtn.addEventListener('click', generateChart);
+downloadBtn.addEventListener('click', downloadChart);
+</script>
+
+</body>
+</html>

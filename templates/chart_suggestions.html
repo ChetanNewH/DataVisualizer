@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DataMuse - Chart Suggestions Overview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+      body { font-family: 'Funnel Display', sans-serif; }
+      .dark-gradient {
+          min-height: 100vh;
+          position: relative;
+          background: linear-gradient(135deg, #1a0d2e 0%, #2d1b47 25%, #5b2c6f 50%, #8b3a62 75%, #b83d50 100%);
+      }
+      .dark-gradient::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background-image: url('{{ url_for("static", filename="images/DATAMUSE.png") }}');
+          background-size: cover;
+          background-position: center;
+          opacity: 0.6;
+          z-index: 0;
+      }
+      .content-overlay { position: relative; z-index: 1; }
+      .glass-card {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 20px;
+          transition: all 0.3s ease;
+      }
+      .glass-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      }
+      .suggestion-table th, .suggestion-table td {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+          padding: 12px;
+          text-align: left;
+          vertical-align: middle;
+      }
+      .suggestion-table th {
+          color: #cb00ff;
+          font-weight: 600;
+          background: rgba(255,255,255,0.08);
+      }
+      .chip {
+          display: inline-flex;
+          align-items: center;
+          background: linear-gradient(135deg, #cb00ff 0%, #b83d50 100%);
+          color: white;
+          padding: 5px 10px;
+          border-radius: 15px;
+          font-size: 0.85rem;
+          margin: 3px;
+      }
+      .plot-btn {
+          background: white;
+          color: #b83d50;
+          font-size: 0.7rem;
+          border-radius: 10px;
+          padding: 2px 6px;
+          margin-left: 6px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+      }
+      .plot-btn:hover {
+          background: #cb00ff;
+          color: white;
+          transform: scale(1.05);
+      }
+  </style>
+</head>
+<body class="dark-gradient text-white min-h-screen">
+    <!-- Navbar -->
+    <nav class="content-overlay fixed top-0 left-0 right-0 z-10 p-6">
+        <div class="flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-white tracking-tight">DATAMUSE</h1>
+            <a href="/dataclean" class="gradient-button px-4 py-2 rounded-lg font-medium text-white bg-purple-700 hover:bg-purple-800 transition">
+                ← Data-Preview Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="content-overlay max-w-7xl mx-auto pt-28 px-6 pb-16">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-bold mb-2">All Column Combinations & Suggested Charts</h2>
+            <p class="text-purple-200 opacity-90 text-sm">Automatically generated suggestions based on your dataset</p>
+        </div>
+
+        <div class="glass-card p-6 overflow-x-auto">
+            <table class="suggestion-table w-full text-sm">
+                <thead>
+                    <tr>
+                        <th>Column 1</th>
+                        <th>Column 2</th>
+                        <th>Detected Types</th>
+                        <th>Suggested Charts</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody id="suggestion-body">
+                    <!-- JS Injected Rows -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Data for JS -->
+    <div id="column-data"
+        data-numeric='{{ numeric_cols|tojson|safe }}'
+        data-categorical='{{ categorical_cols|tojson|safe }}'
+        data-datetime='{{ datetime_cols|tojson|safe }}'
+        style="display: none;">
+    </div>
+
+    <script>
+        const columnData = document.getElementById('column-data');
+        const numericCols = JSON.parse(columnData.dataset.numeric);
+        const categoricalCols = JSON.parse(columnData.dataset.categorical);
+        const datetimeCols = JSON.parse(columnData.dataset.datetime);
+        const allCols = [...numericCols, ...categoricalCols, ...datetimeCols];
+        const tbody = document.getElementById('suggestion-body');
+
+        function getType(col) {
+            if (numericCols.includes(col)) return 'Numeric';
+            if (categoricalCols.includes(col)) return 'Categorical';
+            if (datetimeCols.includes(col)) return 'Datetime';
+            return 'Unknown';
+        }
+
+        function getSuggestions(col1, col2) {
+            const type1 = getType(col1);
+            const type2 = getType(col2);
+            let charts = [];
+            let reasons = [];
+
+            if (col1 && !col2) {
+                if (type1 === 'Numeric') {
+                    charts = ["Histogram", "Box Plot (Single Column)"];
+                    reasons = ["Shows distribution", "Shows spread & outliers"];
+                } else if (type1 === 'Categorical') {
+                    charts = ["Count Plot", "Pie Chart"];
+                    reasons = ["Shows frequency", "Shows category proportion"];
+                }
+            } else if (col1 && col2 && col1 !== col2) {
+                const combo = [type1, type2].sort().join(',');
+                if (combo === 'Numeric,Numeric') {
+                    charts = ["Scatter Plot"];
+                    reasons = ["Shows correlation between two numeric columns"];
+                } else if (combo === 'Categorical,Numeric') {
+                    charts = ["Bar Plot (by Value)", "Box Plot (by Category)"];
+                    reasons = ["Compares numeric values by category", "Shows numeric distribution per category"];
+                } else if (combo === 'Datetime,Numeric') {
+                    charts = ["Line Plot (Time-Series)"];
+                    reasons = ["Shows trend over time"];
+                } else if (combo === 'Categorical,Categorical') {
+                    charts = ["Heatmap (Crosstab)"];
+                    reasons = ["Shows relationship between categories"];
+                }
+            }
+
+            if (numericCols.length >= 2 && !charts.includes("Correlation Heatmap")) {
+                charts.push("Correlation Heatmap");
+                reasons.push("Shows correlation between numeric variables");
+            }
+
+            return { charts, reasons };
+        }
+
+        allCols.forEach((col1) => {
+            const { charts: singleCharts, reasons: singleReasons } = getSuggestions(col1, null);
+            if (singleCharts.length > 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${col1}</td>
+                    <td>—</td>
+                    <td>${getType(col1)}</td>
+                    <td>${singleCharts.map((c,i) => `<span class="chip">${c} <a href="/plot?chart=${encodeURIComponent(c)}&col1=${encodeURIComponent(col1)}" class="plot-btn">Plot</a></span>`).join(' ')}</td>
+                    <td>${singleReasons.join('<br>')}</td>
+                `;
+                tbody.appendChild(row);
+            }
+
+            allCols.forEach((col2) => {
+                if (col1 !== col2) {
+                    const { charts, reasons } = getSuggestions(col1, col2);
+                    if (charts.length > 0) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${col1}</td>
+                            <td>${col2}</td>
+                            <td>${getType(col1)} + ${getType(col2)}</td>
+                            <td>${charts.map((c,i) => `<span class="chip">${c} <a href="/plot?chart=${encodeURIComponent(c)}&col1=${encodeURIComponent(col1)}&col2=${encodeURIComponent(col2)}" class="plot-btn">Plot</a></span>`).join(' ')}</td>
+                            <td>${reasons.join('<br>')}</td>
+                        `;
+                        tbody.appendChild(row);
+                    }
+                }
+            });
+        });
+
+        anime.timeline({ loop: false })
+            .add({
+                targets: 'nav h1',
+                translateY: [-20, 0],
+                opacity: [0, 1],
+                duration: 700,
+                easing: 'easeOutExpo'
+            })
+            .add({
+                targets: '.glass-card',
+                translateY: [40, 0],
+                opacity: [0, 1],
+                duration: 1000,
+                easing: 'easeOutExpo'
+            }, '-=400')
+            .add({
+                targets: 'tr',
+                opacity: [0, 1],
+                translateY: [10, 0],
+                delay: anime.stagger(40),
+                duration: 600,
+                easing: 'easeOutQuad'
+            }, '-=600');
+    </script>
+</body>
+</html>
